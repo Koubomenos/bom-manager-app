@@ -8,9 +8,7 @@ generator client {
 
 // ΠΡΟΣΟΧΗ: Πρόσθεσα τα url από το .env.local σου για να δουλέψει με το Supabase
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider = "postgresql"
 }
 
 // ==========================================
