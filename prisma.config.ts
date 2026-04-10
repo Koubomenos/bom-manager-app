@@ -1,8 +1,12 @@
 import { defineConfig } from '@prisma/config';
+import { config } from 'dotenv';
+
+config(); 
 
 export default defineConfig({
   datasource: {
-    url: process.env.POSTGRES_PRISMA_URL,
+    // Άλλαξέ το προσωρινά σε NON_POOLING για να ξεκολλήσει!
+    url: process.env.POSTGRES_URL_NON_POOLING,
     // @ts-ignore
     directUrl: process.env.POSTGRES_URL_NON_POOLING,
   },
