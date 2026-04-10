@@ -1,0 +1,95 @@
+// Prisma Schema for BOM Manager App
+// Database: PostgreSQL (Supabase)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// ΠΡΟΣΟΧΗ: Πρόσθεσα τα url από το .env.local σου για να δουλέψει με το Supabase
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// ==========================================
+// 1. ΠΙΝΑΚΑΣ ΧΡΗΣΤΩΝ
+// ==========================================
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // Εδώ θα αποθηκεύεις τον κρυπτογραφημένο κωδικό
+  name      String?  // Προαιρετικό πεδίο (?)
+  role      String   @default("USER") // Από εδώ θα κάνεις κάποιον "ADMIN"
+  
+  // Ένας χρήστης μπορεί να έχει δημιουργήσει πολλές συνταγές
+  recipes   Recipe[] 
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ==========================================
+// 2. ΥΛΙΚΑ & ΧΡΩΜΑΤΑ
+// ==========================================
+model Material {
+  id              Int              @id @default(autoincrement())
+  name            String
+  unit            String           @db.VarChar(50)
+  recipeMaterials RecipeMaterial[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("materials")
+}
+
+model BaseColor {
+  id              Int              @id @default(autoincrement())
+  code            String           @unique @db.VarChar(50)
+  name            String           @db.VarChar(100)
+  recipeMaterials RecipeMaterial[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("base_colors")
+}
+
+// ==========================================
+// 3. ΣΥΝΤΑΓΕΣ (BOM)
+// ==========================================
+model Recipe {
+  id          Int              @id @default(autoincrement())
+  sku         String           @db.VarChar(100)
+  color       String           @db.VarChar(100)
+  
+  // Σύνδεση με τον Χρήστη που την έφτιαξε
+  userId      Int?             @map("user_id") 
+  user        User?            @relation(fields: [userId], references: [id])
+
+  materials   RecipeMaterial[]
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([sku, color])
+  @@map("recipes")
+}
+
+model RecipeMaterial {
+  id         Int       @id @default(autoincrement())
+  recipeId   Int       @map("recipe_id")
+  materialId Int       @map("material_id")
+  colorId    Int       @map("color_id")
+  quantity   Decimal   @db.Decimal(10, 3)
+
+  recipe     Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  material   Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  color      BaseColor @relation(fields: [colorId], references: [id], onDelete: Cascade)
+
+  @@map("recipe_materials")
+}
